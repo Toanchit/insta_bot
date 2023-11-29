@@ -46,7 +46,15 @@ class account:
 
         # Exclude the collection of enable-automation switches
         self.options .add_experimental_option("excludeSwitches", ["enable-automation"])
-
+        # turn off pop up save password
+        self.options.add_argument("--password-store=basic")
+        self.options.add_experimental_option(
+        "prefs",
+        {
+            "credentials_enable_service": False,
+            "profile.password_manager_enabled": False,
+        },
+        )
         # Turn-off userAutomationExtension
         self.options .add_experimental_option("useAutomationExtension", False)
         # self.driver = webdriver.Chrome(options=options)
@@ -82,7 +90,7 @@ class account:
             time.sleep(random.randint(1,3))
             # login button
             Login_button = WebDriverWait(self.driver, 2).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))).click()
-            time.sleep(100)
+            time.sleep(10)
             # click not turn off notification, there are 2 cases for this task, will use the try except to handle all cases can be occured.
         result = False
         self.driver.get("https://www.instagram.com")
@@ -131,7 +139,7 @@ class account:
         noHastag = len(self.mHastagsSearch)
         randInd = random.randint(0,noHastag-1)
         self.driver.get("https://www.instagram.com/explore/tags/"+self.mHastagsSearch[randInd]+'/')
-        time.sleep(10)
+        time.sleep(2)
         # click to first thumbnail
         result = False
         time.sleep(random.randint(1,5))
@@ -178,6 +186,7 @@ class account:
     def inputToPopUp(self,filePath):
         # there is an issue when write , so we will write the first
         # first character and delete it before write the correct filePath
+        print("start write caption")
         pyautogui.typewrite("a", interval=0.05)
         pyautogui.press('backspace')
         pyautogui.typewrite(filePath, interval=0.05)
@@ -206,22 +215,41 @@ class account:
                 for files in glob.glob(folderToPost+"*.jpg"):
                     fileToPost = files
                     break
-        print(fileToPost)
+        if len(fileToPost)>0:
+            print(fileToPost)
+        else:
+            print("call to new post again because there is an issue with post")
+            postTheNewPost(isVideo)
         self.driver.get("https://www.instagram.com/")
         # time.sleep(100)
         create = WebDriverWait(self.driver,10).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"svg[aria-label='New post']")))
         create.click()
         time.sleep(2)
-        WebDriverWait(self.driver,20).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"button[type='button']")))
-        buttonToPost = self.driver.find_elements(By.CSS_SELECTOR,"button[type='button']")
-        for btt in buttonToPost:
-            if btt.text == "Select from computer":
-                btt.click()
+        try:
+            postbtt2 = WebDriverWait(self.driver,10).until(EC.element_to_be_clickable((By.LINK_TEXT,"Post")))
+            postbtt2.click()
+        except:
+            print("there is no button post when create new post")
+        time.sleep(2)
+        # don't need to use button select from computer, instead of that, we will use send_key to send the path
+        # WebDriverWait(self.driver,20).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"button[type='button']")))
+        # buttonToPost = self.driver.find_elements(By.CSS_SELECTOR,"button[type='button']")
+        # for btt in buttonToPost:
+        #     if btt.text == "Select from computer":
+        #         print("there is a button select from computer")
+        #         btt.click()
         filePath = util.correctFolderName2(fileToPost)
-        print(filePath)
-        self.inputToPopUp(filePath)
+        print("file path to post is ",filePath)
+        # self.inputToPopUp(filePath)
+        inputPath = self.driver.find_elements(By.CSS_SELECTOR,"input[accept^='image/jpeg']")
+        print("number of input Path = ",len(inputPath))
+        try:
+            inputPath[0].send_keys(filePath)
+        except:
+            print("cannot send path to choose file to post ",len(inputPath))
+            return
         if anyVideo == True:
-            time.sleep(20)
+            time.sleep(10)
         try :
             WebDriverWait(self.driver,10).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"button[type='button']")))
             buttonOk = self.driver.find_elements(By.CSS_SELECTOR, "button[type='button']")
@@ -240,10 +268,10 @@ class account:
             if nex.text == "Next":
                 nex.click()
                 break
-        captions = util.getCaption(folderToPost,self.mHastagsPost)
+        captions = util.getCaption(folderToPost,self.mHastagsPost,self.mUser)
         try:
             WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"div[aria-label='Write a caption...']")))
-            textCaption = self.driver.find_element(By.CSS_SELECTOR,"div[aria-label='Write a caption...']")
+            textCaption = self.driver.find_element(By.CSS_SELECTOR,"div[aria-label^='Write a caption']")
             for cap in captions:
                 try:
                     textCaption.send_keys(cap)
@@ -257,9 +285,17 @@ class account:
             if share.text=="Share":
                 share.click()
                 break
-        time.sleep(10)
+        needToWait = True
+        while needToWait==True:
+            print("need to wait more 5s for post successfully")
+            time.sleep(5)
+            successPost = self.driver.find_elements(By.CSS_SELECTOR, "span[class^='x1lliihq']")
+            for i in successPost:
+                if i.text =="Your post has been shared.":
+                    needToWait = False
+                    break
         print("The new post is created successfully,remove folder")
-        shutil.rmtree(folderToPost)
+        # shutil.rmtree(folderToPost)
         time.sleep(20)
         self.driver.close()
         return True
@@ -289,16 +325,14 @@ def getEachAcc(userName):
 def postForAllAccount():
     print("Start post all with ",len(listAccount)," account")
     for acc in listAccount:
-        # if acc.mUser == "fanaccount_rowing":
-        #     continue
-        if acc.mUser=="fanlove_yelowstone" and  acc.login()==True:
+        if acc.mUser !="startrek_fanaccount" and  acc.login()==True:
+        # if acc.login() == True:
             # acc.downloadPost()
             acc.postTheNewPost(acc.downloadPost())
-        # time.sleep(random.randint(200,600))
+            time.sleep(random.randint(100,300))
 appStop = False
 updateListAccount()
 t1 = threading.Thread(target=postForAllAccount(),name="postAll")
 t1.start()
-
 
 
