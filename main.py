@@ -324,7 +324,26 @@ class account:
         return fileToPost
     def followThePeople(self):
         self.goToHastag()
-
+    def nextButtonWhenPost(self):
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "div[role='button']")))
+        next1 = self.driver.find_elements(By.CSS_SELECTOR, "div[role='button']")
+        for nex in next1:
+            try:
+                if nex.text == "Next":
+                    nex.click()
+                    return True
+            except:
+                continue
+        return False
+    def checkButtonOk(self):
+        try :
+            WebDriverWait(self.driver,10).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"button[type='button']")))
+            buttonOk = self.driver.find_elements(By.CSS_SELECTOR, "button[type='button']")
+            for btt in buttonOk:
+                if btt.text == "OK":
+                    btt.click()
+        except:
+            print("there is no button Ok for video")
     def postTheNewPost(self,isVideo):
         print("start to post")
         folderToPost =""
@@ -332,6 +351,7 @@ class account:
             folderToPost = self.mPath+"/video/"
         else:
             folderToPost = self.mPath+"/image/"
+        # will get caption on the begin of function to check the caption is English or not
         captions = util.getCaption(folderToPost, self.mHastagsPost, self.mUser)
         if captions[0] == "NotEnglish":
             shutil.rmtree(folderToPost)
@@ -373,33 +393,12 @@ class account:
             print("cannot send path to choose file to post ",len(inputPath))
             return
         time.sleep(2)
-        try :
-            WebDriverWait(self.driver,10).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"button[type='button']")))
-            buttonOk = self.driver.find_elements(By.CSS_SELECTOR, "button[type='button']")
-            for btt in buttonOk:
-                if btt.text == "OK":
-                    btt.click()
-        except:
-            print("there is no button Ok for video")
-        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"div[role='button']")))
-        next1 = self.driver.find_elements(By.CSS_SELECTOR,"div[role='button']")
-        for nex in next1:
-            try:
-                if nex.text == "Next":
-                    nex.click()
-                    break
-            except:
-                continue
-        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"div[role='button']")))
-        next2 = self.driver.find_elements(By.CSS_SELECTOR, "div[role='button']")
-        for nex in next2:
-            try:
-                if nex.text == "Next":
-                    nex.click()
-                    break
-            except:
-                continue
-        # captions = util.getCaption(folderToPost,self.mHastagsPost,self.mUser)
+        self.checkButtonOk()
+        # need to press nextButton 2 times
+        for i in range(2):
+            if self.nextButtonWhenPost() == False:
+                self.checkButtonOk()
+                self.nextButtonWhenPost()
         try:
             WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"div[aria-label='Write a caption...']")))
             textCaption = self.driver.find_element(By.CSS_SELECTOR,"div[aria-label^='Write a caption']")
@@ -457,7 +456,7 @@ def getEachAcc(userName):
 def postForAllAccount():
     print("Start post all with ",len(listAccount)," account")
     for acc in listAccount:
-        if acc.mUser !="startrek_fanaccount" and acc.mUser !="surfing_wave_warrior" and acc.mUser !="fanaccount_rowing" and  acc.login()==True:
+        if acc.mUser !="startrek_fanaccount" and acc.mUser !="" and acc.mUser !="" and  acc.login()==True:
         # if acc.login() == True:
         #     acc.downloadPost2()
         #     break
