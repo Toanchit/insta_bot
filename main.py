@@ -7,6 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome import service
 from selenium.webdriver.chrome.options import Options
 # pickle is used to save the cookies
@@ -15,6 +16,7 @@ import downloadVideo,instaloader
 import glob
 # pyautogui is usded to handle popup
 import pyautogui,shutil,json,threading
+import pyperclip
 
 import util
 
@@ -62,10 +64,6 @@ class account:
         )
         # Turn-off userAutomationExtension
         self.options .add_experimental_option("useAutomationExtension", False)
-        # do not show windows of chrome
-        # self.options.add_argument('--headless')
-        # self.driver = webdriver.Chrome(options=options)
-        # self.driver.get("https://www.instagram.com")
         self.L = instaloader.Instaloader()
         self.mUser = user
         self.mPassw = passw
@@ -140,9 +138,16 @@ class account:
                 nextPost[1].click()
             else:
                 nextPost[0].click()
+            return True
         except:
-            print("cannot click nextPost")
-            print(NameError)
+            print("cannot click nextPost,try to using scroll down")
+            self.nextPost2()
+            return False
+    # sometime,we need to nextpost by using scroll down
+    def nextPost2(self):
+        self.driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+        time.sleep(2)
+
     def downloadPost(self):
         # go to url link of hastag search:
         noHastag = len(self.mHastagsSearch)
@@ -170,7 +175,7 @@ class account:
                 try :
                     if len(noOfLike) >= 2 :
                         print("noOfLike is ",noOfLike[1].text)
-                        if convertStringToInt(noOfLike[1].text)>500:
+                        if convertStringToInt(noOfLike[1].text)>200:
                             print("noOflike is ",noOfLike[1].text)
                             downloadVideo.downloadPost(self.L,self.driver.current_url)
                             break
@@ -233,20 +238,30 @@ class account:
                 continue
         time.sleep(5)
         return result
+    def goToHastag2(self):
+        noHastag = len(self.mHastagsSearch)
+        randInd = random.randint(0, noHastag - 1)
+        self.driver.get("https://www.instagram.com/explore/tags/" + self.mHastagsSearch[randInd] + '/')
+        return True
     def downloadPost2(self):
         # go to url link of hastag search:
-        if self.goToHastag() == False:
+        if self.goToHastag2() == False:
             print("cannot go to this hastag")
             return False
         # click to first thumbnail
         result = False
-        time.sleep(random.randint(1,5))
-        WebDriverWait(self.driver,10).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"div[class^='x9f619']")))
+        time.sleep(5)
+        WebDriverWait(self.driver,20).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"div[class^='x9f619']")))
         thumnails = self.driver.find_elements(By.CSS_SELECTOR,"div[class^='x9f619']")
         count =len(thumnails)
         if count != 0:
             # need to be random for the first click
             thumnails[0].click()
+            for ranI in range(random.randint(0,10)):
+                if self.nexPost() == False:
+                    # self.driver.refresh()
+                    print("currently do nothing")
+                time.sleep(1)
             # time.sleep(30)
             for i in range(count):
                 print(self.driver.current_url)
@@ -259,17 +274,21 @@ class account:
                 try :
                     if len(noOfLike) >= 2 :
                         print("noOfLike is ",noOfLike[1].text)
-                        if convertStringToInt(noOfLike[1].text)>400:
+                        if convertStringToInt(noOfLike[1].text)>200:
                             print("noOflike is ",noOfLike[1].text)
+                            # will set the folder of instaloader again because after download , the folder is change
+                            self.L.dirname_pattern = self.mPath + '/'
                             result=downloadVideo.downloadPost(self.L,self.driver.current_url)
                             break
                         else:
-                            print("the noOfLike < 500")
+                            print("the noOfLike < 300")
                             self.nexPost()
                     else:
                         print("This post is not show noof like ")
                         if i == 10:
                             print("already check 10 posts, still download")
+                            # will set the folder of instaloader again because after download , the folder is change
+                            self.L.dirname_pattern = self.mPath + '/'
                             result= downloadVideo.downloadPost(self.L, self.driver.current_url)
                             break
                         self.nexPost()
@@ -344,6 +363,10 @@ class account:
                     btt.click()
         except:
             print("there is no button Ok for video")
+    def pasteContent(self,caption,action):
+        pyperclip.copy(caption)
+        action.key_down(Keys.CONTROL).send_keys("v").key_up(Keys.CONTROL).perform()
+
     def postTheNewPost(self,isVideo):
         print("start to post")
         folderToPost =""
@@ -399,18 +422,18 @@ class account:
             if self.nextButtonWhenPost() == False:
                 self.checkButtonOk()
                 self.nextButtonWhenPost()
-        try:
-            WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"div[aria-label='Write a caption...']")))
-            textCaption = self.driver.find_element(By.CSS_SELECTOR,"div[aria-label^='Write a caption']")
-            for cap in captions:
-                try:
-                    textCaption.send_keys(cap)
-                except:
-                    self.driver.execute_script(JS_ADD_TEXT_TO_INPUT,textCaption,cap)
-                    continue
-        except:
-            print("cannot get a text caption")
-            return False
+
+        WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"div[aria-label='Write a caption...']")))
+        textCaption = self.driver.find_element(By.CSS_SELECTOR,"div[aria-label^='Write a caption']")
+        textCaption.click()
+        for cap in captions:
+            try:
+                print(cap)
+                textCaption.send_keys(cap)
+            except:
+                # self.driver.execute_script(JS_ADD_TEXT_TO_INPUT,textCaption,cap)
+                action = ActionChains(self.driver)
+                self.pasteContent(cap,action)
         shares = self.driver.find_elements(By.CSS_SELECTOR,"div[role='button']")
         for share in shares:
             if share.text=="Share":
@@ -456,13 +479,17 @@ def getEachAcc(userName):
 def postForAllAccount():
     print("Start post all with ",len(listAccount)," account")
     for acc in listAccount:
-        if acc.mUser !="startrek_fanaccount" and acc.mUser !="" and acc.mUser !="" and  acc.login()==True:
-        # if acc.login() == True:
-        #     acc.downloadPost2()
-        #     break
-            acc.postTheNewPost(acc.downloadPost2())
-        #     acc.postTheNewPost(True)
-            time.sleep(random.randint(100,300))
+        try:
+            if acc.mUser !="startrek_fanaccount" and acc.mUser !="" and acc.mUser !="":
+                if acc.login() == True:
+                    acc.postTheNewPost(acc.downloadPost2())
+                #     acc.postTheNewPost(True)
+                    time.sleep(random.randint(100,300))
+                else:
+                    print(acc.mUser," login fail")
+        except:
+            print("there is an issue with account : ",acc.mUser," ",Exception)
+            continue
 def followWithAccount(mUser):
     print("Start follow the acount: ",mUser)
     acc = getEachAcc(mUser)
@@ -470,7 +497,7 @@ def followWithAccount(mUser):
 
 appStop = False
 updateListAccount()
-t1 = threading.Thread(target=postForAllAccount(),name="postAll")
+t1 = threading.Thread(target=postForAllAccount,name="postAll")
 t1.start()
 
 

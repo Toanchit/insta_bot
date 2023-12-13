@@ -54,7 +54,7 @@ def getCaption(folder,mHastagPost,mUser):
         for i in result1:
             if i[0] != '#':
                 result.append(i)
-            if isEnglish == False and i[0].isascii() == False and i[0].isalpha() ==False:
+            if isEnglish == False and i[0].isascii() == False:
                 print("the language is not English , need to download post again :",i[0])
                 return ["NotEnglish"]
             else:
@@ -70,7 +70,7 @@ def getCaption(folder,mHastagPost,mUser):
         return result
     except:
         print("Cannot get caption")
-        print(NameError)
+        print(Exception)
         return "False"
 # t = "C:/Users/Admin/Desktop/code/code_python/listAccount\ "
 # print(correctFolderName2(t))
@@ -143,3 +143,4 @@ def downloadVideoWithLink(url):
 # downloadVideoWithLink("https://www.instagram.com/p/C0OhH-wPZ_z")
 # for i in getCaption(30):
 #     print(i)
+# genJsonformat("hastag.txt")
