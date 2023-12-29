@@ -366,7 +366,8 @@ class account:
     def pasteContent(self,caption,action):
         pyperclip.copy(caption)
         action.key_down(Keys.CONTROL).send_keys("v").key_up(Keys.CONTROL).perform()
-
+    def finishTask(self):
+        self.driver.close()
     def postTheNewPost(self,isVideo):
         print("start to post")
         folderToPost =""
@@ -484,16 +485,16 @@ def postForAllAccount():
                 if acc.login() == True:
                     acc.postTheNewPost(acc.downloadPost2())
                 #     acc.postTheNewPost(True)
-                    time.sleep(random.randint(100,300))
+                    time.sleep(random.randint(200,300))
                 else:
                     print(acc.mUser," login fail")
         except:
             print("there is an issue with account : ",acc.mUser," ",Exception)
+            acc.finishTask()
             continue
 def followWithAccount(mUser):
     print("Start follow the acount: ",mUser)
     acc = getEachAcc(mUser)
-
 
 appStop = False
 updateListAccount()
