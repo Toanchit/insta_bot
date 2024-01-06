@@ -35,9 +35,13 @@ def convertStringToInt(s):
         if i =='K':
             temp = temp+"000"
             break
-        if i!=',':
+        if i!=',' and i!='.':
             temp=temp+i
     return int(temp)
+def print_log(logs):
+    fileLog = open("LogPost.txt","a",encoding='utf8')
+    fileLog.write(logs)
+    fileLog.write("\n")
 class account:
     # the 2 line below to set chrome in the mode headless(ko hien thi)
     # optio = webdriver.ChromeOptions()
@@ -485,13 +489,26 @@ def postForAllAccount():
                 if acc.login() == True:
                     acc.postTheNewPost(acc.downloadPost2())
                 #     acc.postTheNewPost(True)
-                    time.sleep(random.randint(200,300))
                 else:
                     print(acc.mUser," login fail")
         except:
             print("there is an issue with account : ",acc.mUser," ",Exception)
             acc.finishTask()
             continue
+        # change the sleep time to the end of loop to avoid the waiting time with the last element
+        time.sleep(random.randint(200, 400))
+def handlingThePost():
+    print("list the acc as below:")
+    i =1
+    for acc in listAccount:
+        print(i,":",acc.mUser)
+        i=i+1
+    noAcc =int(input("Choose the acc will be post manually: "))
+    if listAccount[noAcc-1].login() == True:
+        nextAct = int(input("What do you want to do :(1: exit) "))
+        if nextAct == 1:
+            listAccount[noAcc - 1].finishTask()
+
 def followWithAccount(mUser):
     print("Start follow the acount: ",mUser)
     acc = getEachAcc(mUser)
@@ -499,6 +516,7 @@ def followWithAccount(mUser):
 appStop = False
 updateListAccount()
 t1 = threading.Thread(target=postForAllAccount,name="postAll")
+t2 = threading.Thread(target=handlingThePost,name="postManually")
+# t1.start()
 t1.start()
-
-
+t1.join()

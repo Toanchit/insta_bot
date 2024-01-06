@@ -52,8 +52,14 @@ def getCaption(folder,mHastagPost,mUser):
         caption.close()
         isEnglish = False
         for i in result1:
-            if i[0] != '#':
-                result.append(i)
+            tempText = ""
+            for tempChar in i:
+                if tempChar != '#' and tempChar != '.':
+                    tempText = tempText+tempChar
+                elif tempChar == '#':
+                    break
+            if len(tempText)>0:
+                result.append(tempText)
             if isEnglish == False and i[0].isascii() == False:
                 print("the language is not English , need to download post again :",i[0])
                 return ["NotEnglish"]
