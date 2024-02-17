@@ -15,7 +15,7 @@ import os,pickle
 import downloadVideo,instaloader
 import glob
 # pyautogui is usded to handle popup
-import pyautogui,shutil,json,threading
+import shutil,json,threading
 import pyperclip
 
 import util
@@ -29,15 +29,18 @@ JS_ADD_TEXT_TO_INPUT = """
 if os.path.isdir(path) == False:
     os.mkdir(path)
 def convertStringToInt(s):
-    size =len(s)
-    temp=""
-    for i in s:
-        if i =='K':
-            temp = temp+"000"
-            break
-        if i!=',' and i!='.':
-            temp=temp+i
-    return int(temp)
+    try:
+        size =len(s)
+        temp=""
+        for i in s:
+            if i =='K':
+                temp = temp+"000"
+                break
+            if i!=',' and i!='.':
+                temp=temp+i
+        return int(temp)
+    except:
+        return 0
 def print_log(logs):
     fileLog = open("LogPost.txt","a",encoding='utf8')
     fileLog.write(logs)
@@ -174,13 +177,13 @@ class account:
                 noOfLike = self.driver.find_elements(By.CSS_SELECTOR, "span[class^='html-span xdj266r']")
                 time.sleep(2)
                 print(len(noOfLike))
-                # for k in noOfLike:
-                #     print(k.get_attribute("textContent"))
+                for k in noOfLike:
+                    print(k.text)
                 try :
-                    if len(noOfLike) >= 2 :
-                        print("noOfLike is ",noOfLike[1].text)
-                        if convertStringToInt(noOfLike[1].text)>200:
-                            print("noOflike is ",noOfLike[1].text)
+                    if len(noOfLike) >= 3 :
+                        print("noOfLike is ",noOfLike[2].text)
+                        if convertStringToInt(noOfLike[2].text)>200:
+                            print("noOflike is ",noOfLike[2].text)
                             downloadVideo.downloadPost(self.L,self.driver.current_url)
                             break
                         else:
@@ -274,12 +277,12 @@ class account:
                 time.sleep(2)
                 print(len(noOfLike))
                 # for k in noOfLike:
-                #     print(k.get_attribute("textContent"))
+                #     print(k.text)
                 try :
                     if len(noOfLike) >= 2 :
-                        print("noOfLike is ",noOfLike[1].text)
-                        if convertStringToInt(noOfLike[1].text)>200:
-                            print("noOflike is ",noOfLike[1].text)
+                        print("noOfLike is ",noOfLike[len(noOfLike)-1].text)
+                        if convertStringToInt(noOfLike[len(noOfLike)-1].text)>200:
+                            print("noOflike is ",noOfLike[len(noOfLike)-1].text)
                             # will set the folder of instaloader again because after download , the folder is change
                             self.L.dirname_pattern = self.mPath + '/'
                             result=downloadVideo.downloadPost(self.L,self.driver.current_url)
@@ -456,8 +459,25 @@ class account:
         print("The new post is created successfully,remove folder")
         shutil.rmtree(folderToPost)
         time.sleep(10)
-        self.driver.close()
+        # self.driver.close()
         return True
+    def fillTheCaption(self):
+        folderToPost = self.mPath + "/caption/"
+        captions = util.getCaptionToFillPOD(folderToPost, self.mHastagsPost, self.mUser)
+        WebDriverWait(self.driver, 15).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "div[aria-label='Write a caption...']")))
+        textCaption = self.driver.find_element(By.CSS_SELECTOR, "div[aria-label^='Write a caption']")
+        textCaption.click()
+        for cap in captions:
+            try:
+                print(cap)
+                textCaption.send_keys(cap)
+            except:
+                # self.driver.execute_script(JS_ADD_TEXT_TO_INPUT,textCaption,cap)
+                action = ActionChains(self.driver)
+                self.pasteContent(cap, action)
+
+
 path1 = "C:/Users/Admin/Desktop/code/code_python/listData/"
 listAccount=[]
 isAccountAdded={}
@@ -483,14 +503,22 @@ def getEachAcc(userName):
             return acc
 def postForAllAccount():
     print("Start post all with ",len(listAccount)," account")
+    j =0
     for acc in listAccount:
+        j = j+1
         try:
-            if acc.mUser !="startrek_fanaccount" and acc.mUser !="" and acc.mUser !="":
+            if acc.mUser !="startrek_fanaccount":
                 if acc.login() == True:
                     acc.postTheNewPost(acc.downloadPost2())
+                    acc.finishTask()
+                    if j == len(listAccount):
+                        break
                 #     acc.postTheNewPost(True)
                 else:
-                    print(acc.mUser," login fail")
+                    print(acc.mUser," login fail,try again")
+                    acc.finishTask()
+            elif acc.mUser =="startrek_fanaccount":
+                continue
         except:
             print("there is an issue with account : ",acc.mUser," ",Exception)
             acc.finishTask()
@@ -505,18 +533,49 @@ def handlingThePost():
         i=i+1
     noAcc =int(input("Choose the acc will be post manually: "))
     if listAccount[noAcc-1].login() == True:
-        nextAct = int(input("What do you want to do :(1: exit) "))
-        if nextAct == 1:
-            listAccount[noAcc - 1].finishTask()
+        while True:
+            nextAct = int(input("What do you want to do :(1: exit) (2: fillCaption to post shirt) "))
+            if nextAct == 1:
+                listAccount[noAcc - 1].finishTask()
+                break
+            if nextAct ==2:
+                listAccount[noAcc - 1].fillTheCaption()
 
 def followWithAccount(mUser):
     print("Start follow the acount: ",mUser)
     acc = getEachAcc(mUser)
+def postForEachAcc():
+    print("list the acc as below:")
+    i = 1
+    for acc in listAccount:
+        print(i, ":", acc.mUser)
+        i = i + 1
+    noAcc = int(input("Choose the acc will be post manually: "))
+    if listAccount[noAcc - 1].login() == True:
+        acc = listAccount[noAcc - 1]
+        acc.postTheNewPost(acc.downloadPost2())
+        acc.finishTask()
 
 appStop = False
 updateListAccount()
-t1 = threading.Thread(target=postForAllAccount,name="postAll")
-t2 = threading.Thread(target=handlingThePost,name="postManually")
-# t1.start()
-t1.start()
-t1.join()
+print("List the action as below: ")
+i = 1
+while True:
+    t1 = threading.Thread(target=postForAllAccount, name="postAll")
+    t2 = threading.Thread(target=handlingThePost, name="postManually")
+    t3 = threading.Thread(target=postForEachAcc, name="postForEachAcc")
+    listThread = []
+    listThread.append(t1)
+    listThread.append(t2)
+    listThread.append(t3)
+    i=1
+    for mThread in listThread:
+        print(i, ":", mThread.name)
+        i = i + 1
+    print(i,": exit")
+    indThread = int(input("Choose the thread will be run:"))
+    if indThread==4:
+        break
+    listThread[indThread-1].start()
+    listThread[indThread-1].join()
+

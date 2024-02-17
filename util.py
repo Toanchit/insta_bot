@@ -78,6 +78,36 @@ def getCaption(folder,mHastagPost,mUser):
         print("Cannot get caption")
         print(Exception)
         return "False"
+def getCaptionToFillPOD(folder,mHastagPost,mUser):
+    try:
+        filesToGet =""
+        if len(glob.glob(folder+"*.txt")) ==0:
+            print("there is no caption for this acc:",mUser)
+            return ""
+        for files in glob.glob(folder+"*.txt"):
+            filesToGet = files
+            break
+        print(correctFolderNameForCaption(filesToGet))
+        caption = open(correctFolderNameForCaption(filesToGet),"r",encoding='utf8')
+        result1 = caption.readlines()
+        result=[]
+        caption.close()
+        for i in result1:
+            result.append(i)
+        result.append("\n")
+        followMe = "Follow me for more : @"+mUser+"\n"
+        result.append(followMe)
+        sizeHastag = len(mHastagPost)
+        rand30 = genRandom30List(sizeHastag)
+        hastag =""
+        for i in rand30:
+            hastag=hastag+mHastagPost[i]+" "
+        result.append(hastag)
+        return result
+    except:
+        print("Cannot get caption")
+        print(Exception)
+        return "False"
 # t = "C:/Users/Admin/Desktop/code/code_python/listAccount\ "
 # print(correctFolderName2(t))
 # getCaption("C:/Users/Admin/Desktop/code/code_python/listAccount/startrek_fanaccount/image/")
