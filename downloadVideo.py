@@ -21,3 +21,10 @@ def downloadvideo(L,post):
 def downloadImage(L,post):
     L.dirname_pattern = L.dirname_pattern + "image/"
     L.download_post(post,"image")
+def getNoFollower(userName):
+    bot = instaloader.Instaloader()
+    # Loading a profile from an Instagram handle
+    profile = instaloader.Profile.from_username(bot.context, userName)
+    return profile.followers
+
+

@@ -36,7 +36,7 @@ def convertStringToInt(s):
             if i =='K':
                 temp = temp+"000"
                 break
-            if i!=',' and i!='.':
+            if i >='0' and i<='9':
                 temp=temp+i
         return int(temp)
     except:
@@ -71,7 +71,7 @@ class account:
         )
         # Turn-off userAutomationExtension
         self.options .add_experimental_option("useAutomationExtension", False)
-        self.L = instaloader.Instaloader()
+        self. L = instaloader.Instaloader()
         self.mUser = user
         self.mPassw = passw
         self.isLogin = False
@@ -482,6 +482,7 @@ path1 = "C:/Users/Admin/Desktop/code/code_python/listData/"
 listAccount=[]
 isAccountAdded={}
 def updateListAccount():
+    listFollower=""
     for acc in glob.glob(path1+"*.json"):
         info = open(acc)
         data = json.load(info)
@@ -497,6 +498,8 @@ def updateListAccount():
         acc1 = account(mUser,mPassword,mHastagsSearch,mHastagsPost)
         listAccount.append(acc1)
         print("find a new account ",acc1.mUser)
+        # listFollower=listFollower+downloadVideo.getNoFollower(mUser)
+
 def getEachAcc(userName):
     for acc in listAccount:
         if acc.mUser == userName:
@@ -562,7 +565,7 @@ print("List the action as below: ")
 i = 1
 while True:
     t1 = threading.Thread(target=postForAllAccount, name="postAll")
-    t2 = threading.Thread(target=handlingThePost, name="postManually")
+    t2 = threading.Thread(target=handlingThePost, name="posttheShirt")
     t3 = threading.Thread(target=postForEachAcc, name="postForEachAcc")
     listThread = []
     listThread.append(t1)
