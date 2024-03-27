@@ -175,9 +175,6 @@ def downloadVideoWithLink(url):
         file_name = link.split('/')[-1]
         print("Downloading file:%s" % file_name)
         urllib.request.urlretrieve(url,file_name)
-def updateFollowerPerday(listFollower):
-    print("start update")
-
 # downloadVideoWithLink("https://www.instagram.com/p/C0OhH-wPZ_z")
 # for i in getCaption(30):
 #     print(i)

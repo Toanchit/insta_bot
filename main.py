@@ -498,7 +498,7 @@ def updateListAccount():
         acc1 = account(mUser,mPassword,mHastagsSearch,mHastagsPost)
         listAccount.append(acc1)
         print("find a new account ",acc1.mUser)
-        # listFollower=listFollower+downloadVideo.getNoFollower(mUser)
+    #     listFollower=listFollower+downloadVideo.getNoFollower(mUser)
 
 def getEachAcc(userName):
     for acc in listAccount:
@@ -558,9 +558,33 @@ def postForEachAcc():
         acc = listAccount[noAcc - 1]
         acc.postTheNewPost(acc.downloadPost2())
         acc.finishTask()
+def updatefFollower():
+    lastData={}
+    if os.path.isfile("today.json"):
+        lastRe=open("today.json","r")
+        lastData=json.load(lastRe)
+    data={}
+    change={}
+    for i in listAccount:
+        try:
+            data[i.mUser]=downloadVideo.getNoFollower(i.mUser)
+            if lastData.get(i.mUser) == None:
+                lastData[i.mUser]=0
+            change[i.mUser]=data[i.mUser]-lastData[i.mUser]
+        except:
+            print("cannot get followers of ",i.mUser)
+            continue
+    data["change"] = change
+    result = open("today.json","w")
+    json.dump(data,result)
+    print("open file")
+    os.startfile("today.json")
+    # print("update follower succesffully")
 
 appStop = False
 updateListAccount()
+fl=threading.Thread(target=updatefFollower,name="updateFollowerPerDay")
+fl.start()
 print("List the action as below: ")
 i = 1
 while True:

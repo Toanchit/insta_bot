@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import shutil
-import re
+import re,string
 import instaloader
 from instaloader import Post
 import util
