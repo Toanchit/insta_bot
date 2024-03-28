@@ -567,7 +567,7 @@ def updatefFollower():
     change={}
     for i in listAccount:
         try:
-            data[i.mUser]=downloadVideo.getNoFollower(i.mUser)
+            data[i.mUser]=getNoFollower(i.mUser)
             if lastData.get(i.mUser) == None:
                 lastData[i.mUser]=0
             change[i.mUser]=data[i.mUser]-lastData[i.mUser]
@@ -577,10 +577,14 @@ def updatefFollower():
     data["change"] = change
     result = open("today.json","w")
     json.dump(data,result)
-    print("open file")
+    # print("open file")
     os.startfile("today.json")
     # print("update follower succesffully")
-
+def getNoFollower(userName):
+    bot = instaloader.Instaloader()
+    # Loading a profile from an Instagram handle
+    profile = instaloader.Profile.from_username(bot.context, userName)
+    return profile.followers
 appStop = False
 updateListAccount()
 fl=threading.Thread(target=updatefFollower,name="updateFollowerPerDay")
