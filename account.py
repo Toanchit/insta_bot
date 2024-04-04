@@ -376,7 +376,7 @@ class account:
             folderToPost = self.mPath+"/image/"
         # will get caption on the begin of function to check the caption is English or not
         captions = util.getCaption(folderToPost, self.mHastagsPost, self.mUser)
-        if captions[0] == "NotEnglish":
+        if captions[0] == "NotEnglish" or self.checkDuplicate(captions[0]) == False:
             shutil.rmtree(folderToPost)
             self.postTheNewPost(self.downloadPost2())
             return True
@@ -468,3 +468,27 @@ class account:
                 # self.driver.execute_script(JS_ADD_TEXT_TO_INPUT,textCaption,cap)
                 action = ActionChains(self.driver)
                 self.pasteContent(cap, action)
+    def checkDuplicate(self,capt):
+        lastData ={}
+        linkData= self.mPath+"/captionData.json"
+        if os.path.isfile(linkData) :
+            lastRe = open(linkData,"r")
+            lastData = json.load(lastRe)
+        else:
+            print("there is no captionData.json")
+        for i in range(10):
+            if lastData.get(str(i)) != None:
+                if capt == linkData[str(i)]:
+                    print(" Current the post is the same with the previous ",i," post")
+                    return False
+            else:
+                lastData[str(i)]=""
+        for i in range(10):
+            if i ==0:
+                continue
+            lastData[str(i)]=lastData[str(i-1)]
+        lastData["0"]=capt
+        updatedData = open(linkData,"w")
+        json.dump(lastData,updatedData)
+        return True
+
