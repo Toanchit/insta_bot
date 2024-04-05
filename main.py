@@ -131,6 +131,10 @@ def updatefFollower():
                 yesterdayTemp = open("yesterday.json","w")
                 json.dump(lastData,yesterdayTemp)
                 yesterdayTemp.close()
+            else:
+                yesterdayTemp = open("yesterday.json", "w")
+                json.dump(lastData, yesterdayTemp)
+                yesterdayTemp.close()
     lastData1={}
     if os.path.isfile("yesterday.json"):
         lastRe1=open("yesterday.json","r")

@@ -478,15 +478,13 @@ class account:
             print("there is no captionData.json")
         for i in range(10):
             if lastData.get(str(i)) != None:
-                if capt == linkData[str(i)]:
+                if capt == lastData[str(i)]:
                     print(" Current the post is the same with the previous ",i," post")
                     return False
             else:
                 lastData[str(i)]=""
-        for i in range(10):
-            if i ==0:
-                continue
-            lastData[str(i)]=lastData[str(i-1)]
+        for i in range(9):
+            lastData[str(9-i)]=lastData[str(8-1)]
         lastData["0"]=capt
         updatedData = open(linkData,"w")
         json.dump(lastData,updatedData)
