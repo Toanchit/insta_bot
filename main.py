@@ -63,6 +63,7 @@ def getEachAcc(userName):
 def postForAllAccount():
     print("Start post all with ",len(listAccount)," account")
     j =0
+    listFailAcc={}
     for acc in listAccount:
         j = j+1
         try:
@@ -80,6 +81,30 @@ def postForAllAccount():
                 continue
         except:
             print("there is an issue with account : ",acc.mUser," ",Exception)
+            listFailAcc.append(acc)
+            acc.finishTask()
+            continue
+        # change the sleep time to the end of loop to avoid the waiting time with the last element
+        time.sleep(random.randint(200, 400))
+    print("retry 1 time with acc post fail")
+    j=0
+    for acc in listFailAcc:
+        j = j + 1
+        try:
+            if acc.mUser != "startrek_fanaccount":
+                if acc.login() == True:
+                    acc.postTheNewPost(acc.downloadPost2())
+                    acc.finishTask()
+                    if j == len(listFailAcc):
+                        break
+                #     acc.postTheNewPost(True)
+                else:
+                    print(acc.mUser, " login fail,try again")
+                    acc.finishTask()
+            elif acc.mUser == "startrek_fanaccount":
+                continue
+        except:
+            print("there is an issue with account : ", acc.mUser, " ", Exception)
             acc.finishTask()
             continue
         # change the sleep time to the end of loop to avoid the waiting time with the last element
@@ -140,13 +165,14 @@ def updatefFollower():
         lastRe1=open("yesterday.json","r")
         lastData1=json.load(lastRe1)
     for i in listAccount:
+        if lastData1.get(i.mUser) == None:
+            lastData1[i.mUser] = 0
         try:
             data[i.mUser]=getNoFollower(i.mUser)
-            if lastData1.get(i.mUser) == None:
-                lastData1[i.mUser]=0
             change[i.mUser]=data[i.mUser]-lastData1[i.mUser]
         except:
-            print("cannot get followers of ",i.mUser)
+            print("cannot get followers of ",i.mUser," keep the latest data")
+            data[i.mUser]=lastData1[i.mUser]
             continue
     data["change"] = change
     result = open("today.json","w")

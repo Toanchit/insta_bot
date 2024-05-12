@@ -255,7 +255,13 @@ class account:
         count =len(thumnails)
         if count != 0:
             # need to be random for the first click
-            thumnails[0].click()
+            ind =0
+            while ind<count:
+                try:
+                    thumnails[ind].click()
+                    break
+                except:
+                    ind=ind+1
             for ranI in range(random.randint(0,5)):
                 if self.nexPost() == False:
                     # self.driver.refresh()
@@ -386,7 +392,7 @@ class account:
         else:
             print("get file to post fail,delete folder to repost in the next time")
             shutil.rmtree(folderToPost)
-            return
+            return False
         self.driver.get("https://www.instagram.com/")
         # time.sleep(100)
         create = WebDriverWait(self.driver,10).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"svg[aria-label='New post']")))
@@ -434,11 +440,15 @@ class account:
                 # self.driver.execute_script(JS_ADD_TEXT_TO_INPUT,textCaption,cap)
                 action = ActionChains(self.driver)
                 self.pasteContent(cap,action)
+        time.sleep(2)
         shares = self.driver.find_elements(By.CSS_SELECTOR,"div[role='button']")
         for share in shares:
-            if share.text=="Share":
-                share.click()
-                break
+            try:
+                if share.text=="Share":
+                    share.click()
+                    break
+            except:
+                continue
         needToWait = True
         while needToWait==True:
             print("need to wait more 5s for post successfully")
@@ -484,7 +494,7 @@ class account:
             else:
                 lastData[str(i)]=""
         for i in range(9):
-            lastData[str(9-i)]=lastData[str(8-1)]
+            lastData[str(9-i)]=lastData[str(8-i)]
         lastData["0"]=capt
         updatedData = open(linkData,"w")
         json.dump(lastData,updatedData)
