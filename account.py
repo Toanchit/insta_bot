@@ -83,6 +83,7 @@ class account:
             for cookie in cookies:
                 self.driver.add_cookie(cookie)
             time.sleep(random.randint(1,3))
+            print("load cookies successfully")
         else:
             username = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='username']")))
             password = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='password']")))
@@ -98,10 +99,26 @@ class account:
             # click not turn off notification, there are 2 cases for this task, will use the try except to handle all cases can be occured.
         result = False
         self.driver.get("https://www.instagram.com")
+        time.sleep(3)
+        # need to check dismiss first, IG just added one more protection action to avoid bot
+        dismiss = self.driver.find_elements(By.CSS_SELECTOR,"div[aria-label='Dismiss']")
+        print("there are ", len(dismiss)," button dismiss")
+        for i in dismiss:
+            try:
+                i.click()
+            except:
+                continue
         time.sleep(2)
         try:
-            notnow3 = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[3]/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/button[2]")))
-            notnow3.click()
+            notnow3s = self.driver.find_elements(By.CSS_SELECTOR,"button[class='_a9-- _ap36 _a9_1']")
+            print("there are ",len(notnow3s)," not button has the same type with not now")
+            for i in notnow3s:
+                try:
+                    if i.text == "Not Now":
+                        i.click()
+                except:
+                    continue
+            # notnow3.click()
             result = True
         except:
             notnow2 = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div/div/div[2]/div/div/div/div[1]/div[1]/div[2]/section/main/div/div/div/div/div")))
