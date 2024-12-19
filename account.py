@@ -18,7 +18,7 @@ import glob
 import shutil,json,threading,pyautogui
 import pyperclip
 
-path = "C:/Users/Admin/Desktop/code/code_python/listAccount"
+path="C:/Users/leduc/OneDrive/Desktop/code/python/insta_bot/listAccount"
 JS_ADD_TEXT_TO_INPUT = """
   var elm = arguments[0], txt = arguments[1];
   elm.value += txt;
@@ -439,6 +439,103 @@ class account:
             print("cannot send path to choose file to post ",len(inputPath))
             return
         time.sleep(2)
+        self.checkButtonOk()
+        # need to press nextButton 2 times
+        for i in range(2):
+            if self.nextButtonWhenPost() == False:
+                self.checkButtonOk()
+                self.nextButtonWhenPost()
+
+        WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"div[aria-label='Write a caption...']")))
+        textCaption = self.driver.find_element(By.CSS_SELECTOR,"div[aria-label^='Write a caption']")
+        textCaption.click()
+        for cap in captions:
+            try:
+                print(cap)
+                textCaption.send_keys(cap)
+            except:
+                # self.driver.execute_script(JS_ADD_TEXT_TO_INPUT,textCaption,cap)
+                action = ActionChains(self.driver)
+                self.pasteContent(cap,action)
+        time.sleep(2)
+        shares = self.driver.find_elements(By.CSS_SELECTOR,"div[role='button']")
+        for share in shares:
+            try:
+                if share.text=="Share":
+                    share.click()
+                    break
+            except:
+                continue
+        needToWait = True
+        while needToWait==True:
+            print("need to wait more 5s for post successfully")
+            time.sleep(5)
+            successPost = self.driver.find_elements(By.CSS_SELECTOR, "span[class^='x1lliihq']")
+            for i in successPost:
+                if i.text =="Your post has been shared." or i.text=="Your reel has been shared.":
+                    needToWait = False
+                    break
+        print("The new post is created successfully,remove folder")
+        shutil.rmtree(folderToPost)
+        time.sleep(10)
+        # self.driver.close()
+        return True
+    # this function to post included the shirt
+    def postTheNewPost2(self,isVideo):
+        print("start to post")
+        folderToPost =""
+        if isVideo == True:
+            folderToPost = self.mPath+"/video/"
+        else:
+            folderToPost = self.mPath+"/image/"
+        # will get caption on the begin of function to check the caption is English or not
+        captions = util.getCaption2(folderToPost, self.mHastagsPost, self.mUser)
+        if captions[0] == "NotEnglish" or self.checkDuplicate(captions[0]) == False:
+            shutil.rmtree(folderToPost)
+            self.postTheNewPost2(self.downloadPost2())
+            return True
+        fileToPost = self.getFileToPost(isVideo)
+        if len(fileToPost)>0:
+            print(fileToPost)
+        else:
+            print("get file to post fail,delete folder to repost in the next time")
+            shutil.rmtree(folderToPost)
+            return False
+        self.driver.get("https://www.instagram.com/")
+        # time.sleep(100)
+        create = WebDriverWait(self.driver,10).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"svg[aria-label='New post']")))
+        create.click()
+        time.sleep(1)
+        try:
+            postbtt2 = WebDriverWait(self.driver,5).until(EC.element_to_be_clickable((By.LINK_TEXT,"Post")))
+            postbtt2.click()
+        except:
+            print("there is no button post when create new post")
+        time.sleep(2)
+        # don't need to use button select from computer, instead of that, we will use send_key to send the path
+        # WebDriverWait(self.driver,20).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"button[type='button']")))
+        # buttonToPost = self.driver.find_elements(By.CSS_SELECTOR,"button[type='button']")
+        # for btt in buttonToPost:
+        #     if btt.text == "Select from computer":
+        #         print("there is a button select from computer")
+        #         btt.click()
+        filePath = util.correctFolderName2(fileToPost)
+        print("file path to post is ",filePath)
+        # self.inputToPopUp(filePath)
+        inputPath = self.driver.find_elements(By.CSS_SELECTOR,"input[accept^='image/jpeg']")
+        print("number of input Path = ",len(inputPath))
+        try:
+            inputPath[0].send_keys(filePath)
+        except:
+            print("cannot send path to choose file to post ",len(inputPath))
+            return
+        time.sleep(2)
+        while True:
+            nextStep = int(input("press 1 to post caption:"))
+            if nextStep ==1 :
+                break
+            else:
+                print("this input is not correct, still wait")
         self.checkButtonOk()
         # need to press nextButton 2 times
         for i in range(2):

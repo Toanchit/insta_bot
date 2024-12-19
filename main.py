@@ -12,9 +12,9 @@ import pyperclip
 import account
 import util
 from datetime import date
-
-path = "C:/Users/Admin/Desktop/code/code_python/listAccount"
-path1 = "C:/Users/Admin/Desktop/code/code_python/listData/"
+path="C:/Users/leduc/OneDrive/Desktop/code/python/insta_bot/listAccount"
+path1="C:/Users/leduc/OneDrive/Desktop/code/python/insta_bot/listData/"
+existTask =5
 if os.path.isdir(path) == False:
     os.mkdir(path)
 def convertStringToInt(s):
@@ -139,6 +139,17 @@ def postForEachAcc():
         acc = listAccount[noAcc - 1]
         acc.postTheNewPost(acc.downloadPost2())
         acc.finishTask()
+def postIncludedShirt():
+    print("list the acc as below:")
+    i = 1
+    for acc in listAccount:
+        print(i, ":", acc.mUser)
+        i = i + 1
+    noAcc = int(input("Choose the acc will be post manually: "))
+    if listAccount[noAcc - 1].login() == True:
+        acc = listAccount[noAcc - 1]
+        acc.postTheNewPost2(acc.downloadPost2())
+        acc.finishTask()
 def updatefFollower():
     lastData={}
     if os.path.isfile("today.json"):
@@ -187,25 +198,27 @@ def getNoFollower(userName):
     return profile.followers
 appStop = False
 updateListAccount()
-fl=threading.Thread(target=updatefFollower,name="updateFollowerPerDay")
-fl.start()
+# fl=threading.Thread(target=updatefFollower,name="updateFollowerPerDay")
+# fl.start()
 print("List the action as below: ")
 i = 1
 while True:
     t1 = threading.Thread(target=postForAllAccount, name="postAll")
     t2 = threading.Thread(target=handlingThePost, name="posttheShirt")
     t3 = threading.Thread(target=postForEachAcc, name="postForEachAcc")
+    t4= threading.Thread(target=postIncludedShirt, name="postIncludedShirt")
     listThread = []
     listThread.append(t1)
     listThread.append(t2)
     listThread.append(t3)
+    listThread.append(t4)
     i=1
     for mThread in listThread:
         print(i, ":", mThread.name)
         i = i + 1
     print(i,": exit")
     indThread = int(input("Choose the thread will be run:"))
-    if indThread==4:
+    if indThread==existTask:
         break
     listThread[indThread-1].start()
     listThread[indThread-1].join()

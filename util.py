@@ -78,6 +78,46 @@ def getCaption(folder,mHastagPost,mUser):
         print("Cannot get caption")
         print(Exception)
         return "False"
+#    This function to get caption and post included the shirt in this post
+def getCaption2(folder,mHastagPost,mUser):
+    try:
+        filesToGet =""
+        for files in glob.glob(folder+"*.txt"):
+            filesToGet = files
+            break
+        print(correctFolderNameForCaption(filesToGet))
+        caption = open(correctFolderNameForCaption(filesToGet),"r",encoding='utf8')
+        result1 = caption.readlines()
+        result=[]
+        caption.close()
+        isEnglish = False
+        for i in result1:
+            tempText = ""
+            for tempChar in i:
+                if tempChar != '#' and tempChar != '.':
+                    tempText = tempText+tempChar
+                elif tempChar == '#':
+                    break
+            if len(tempText)>0:
+                result.append(tempText)
+            if isEnglish == False and i[0].isascii() == False:
+                print("the language is not English , need to download post again :",i[0])
+                return ["NotEnglish"]
+            else:
+                isEnglish = True
+        followMe = "Make sure you check out Yellowstone store link in bio 👉: @"+mUser+"\n"
+        result.append(followMe)
+        sizeHastag = len(mHastagPost)
+        rand30 = genRandom30List(sizeHastag)
+        hastag =""
+        for i in rand30:
+            hastag=hastag+mHastagPost[i]+" "
+        result.append(hastag)
+        return result
+    except:
+        print("Cannot get caption")
+        print(Exception)
+        return "False"
 def getCaptionToFillPOD(folder,mHastagPost,mUser):
     try:
         filesToGet =""
