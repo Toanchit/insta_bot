@@ -12,9 +12,12 @@ import pyperclip
 import account
 import util
 from datetime import date
-path="C:/Users/leduc/OneDrive/Desktop/code/python/insta_bot/listAccount"
-path1="C:/Users/leduc/OneDrive/Desktop/code/python/insta_bot/listData/"
-existTask =5
+# path="C:/Users/leduc/OneDrive/Desktop/code/python/insta_bot/listAccount"
+path = os.getcwd()+"/listAccount"
+# path1="C:/Users/leduc/OneDrive/Desktop/code/python/insta_bot/listData/"
+path1 = os.getcwd()+"/listData/"
+
+existTask =6
 if os.path.isdir(path) == False:
     os.mkdir(path)
 def convertStringToInt(s):
@@ -44,6 +47,7 @@ def updateListAccount():
         data = json.load(info)
         mUser = data["accountUser"]
         mPassword = data["password"]
+        mNiche = data["niche"]
         mHastagsSearch=data["hastagToSearch"]
         mHastagsPost = data["hastagToPost"]
         try:
@@ -51,7 +55,7 @@ def updateListAccount():
                 continue
         except:
             isAccountAdded[mUser]=True
-        acc1 = account.account(mUser,mPassword,mHastagsSearch,mHastagsPost)
+        acc1 = account.account(mUser,mPassword,mHastagsSearch,mHastagsPost,mNiche)
         listAccount.append(acc1)
         print("find a new account ",acc1.mUser)
     #     listFollower=listFollower+downloadVideo.getNoFollower(mUser)
@@ -150,6 +154,18 @@ def postIncludedShirt():
         acc = listAccount[noAcc - 1]
         acc.postTheNewPost2(acc.downloadPost2())
         acc.finishTask()
+def postSpecificPost():
+    print("list the acc as below: ")
+    i = 1
+    for acc in listAccount:
+        print(i, ":", acc.mUser)
+        i = i + 1
+    noAcc = int(input("Choose the acc will be post with specific post : "))
+    if listAccount[noAcc - 1].login() == True:
+        acc = listAccount[noAcc - 1]
+        acc.postTheNewPost3(acc.downloadSpecificPost())
+        acc.finishTask()
+
 def updatefFollower():
     lastData={}
     if os.path.isfile("today.json"):
@@ -207,11 +223,13 @@ while True:
     t2 = threading.Thread(target=handlingThePost, name="posttheShirt")
     t3 = threading.Thread(target=postForEachAcc, name="postForEachAcc")
     t4= threading.Thread(target=postIncludedShirt, name="postIncludedShirt")
+    t5 = threading.Thread(target=postSpecificPost,name ="postSpecificPost")
     listThread = []
     listThread.append(t1)
     listThread.append(t2)
     listThread.append(t3)
     listThread.append(t4)
+    listThread.append(t5)
     i=1
     for mThread in listThread:
         print(i, ":", mThread.name)

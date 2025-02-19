@@ -18,7 +18,8 @@ import glob
 import shutil,json,threading,pyautogui
 import pyperclip
 
-path="C:/Users/leduc/OneDrive/Desktop/code/python/insta_bot/listAccount"
+# path="C:/Users/leduc/OneDrive/Desktop/code/python/insta_bot/listAccount"
+path = os.getcwd()+"/listAccount"
 JS_ADD_TEXT_TO_INPUT = """
   var elm = arguments[0], txt = arguments[1];
   elm.value += txt;
@@ -43,7 +44,7 @@ class account:
     # optio.add_argument('--headless')
     # driver = webdriver.Chrome(options=optio)
     # get chrome drive to open
-    def __init__(self,user,passw,hastagsSearch,hastagsPost):
+    def __init__(self,user,passw,hastagsSearch,hastagsPost,niche):
         # Create Chromeoptions instance
         self.options = webdriver.ChromeOptions()
 
@@ -69,6 +70,7 @@ class account:
         self.isLogin = False
         self.mHastagsSearch = hastagsSearch
         self.mHastagsPost = hastagsPost
+        self.mNiche = niche
         self.mPath = path + '/' + self.mUser
         self.L.dirname_pattern = self.mPath+'/'
         if os.path.isdir(self.mPath) == False:
@@ -163,7 +165,14 @@ class account:
     def nextPost2(self):
         self.driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
         time.sleep(2)
-
+    def downloadSpecificPost(self):
+        # go to url link of hastag search:
+        noHastag = len(self.mHastagsSearch)
+        randInd = random.randint(0, noHastag - 1)
+        self.driver.get("https://www.instagram.com/explore/tags/" + self.mHastagsSearch[randInd] + '/')
+        urlAddress = input("paste the link of this post: ")
+        result = downloadVideo.downloadPost(self.L, urlAddress)
+        return result
     def downloadPost(self):
         # go to url link of hastag search:
         noHastag = len(self.mHastagsSearch)
@@ -467,7 +476,9 @@ class account:
             except:
                 continue
         needToWait = True
+        countToTimeout =1
         while needToWait==True:
+            countToTimeout = countToTimeout +1
             print("need to wait more 5s for post successfully")
             time.sleep(5)
             successPost = self.driver.find_elements(By.CSS_SELECTOR, "span[class^='x1lliihq']")
@@ -475,12 +486,106 @@ class account:
                 if i.text =="Your post has been shared." or i.text=="Your reel has been shared.":
                     needToWait = False
                     break
+            if countToTimeout == 6:
+                break
         print("The new post is created successfully,remove folder")
         shutil.rmtree(folderToPost)
         time.sleep(10)
         # self.driver.close()
         return True
-    # this function to post included the shirt
+    def postTheNewPost3(self,isVideo):
+    # this function to post specific post
+        print("start to post")
+        folderToPost = ""
+        if isVideo == True:
+            folderToPost = self.mPath + "/video/"
+        else:
+            folderToPost = self.mPath + "/image/"
+
+        captions = util.getCaption2(folderToPost, self.mHastagsPost, self.mUser,self.mNiche)
+        fileToPost = self.getFileToPost(isVideo)
+        if len(fileToPost) > 0:
+            print(fileToPost)
+        else:
+            print("get file to post fail,delete folder to repost in the next time")
+            shutil.rmtree(folderToPost)
+            return False
+        self.driver.get("https://www.instagram.com/")
+        # time.sleep(100)
+        create = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "svg[aria-label='New post']")))
+        create.click()
+        time.sleep(1)
+        try:
+            postbtt2 = WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.LINK_TEXT, "Post")))
+            postbtt2.click()
+        except:
+            print("there is no button post when create new post")
+        time.sleep(2)
+        filePath = util.correctFolderName2(fileToPost)
+        print("file path to post is ", filePath)
+        # self.inputToPopUp(filePath)
+        inputPath = self.driver.find_elements(By.CSS_SELECTOR, "input[accept^='image/jpeg']")
+        print("number of input Path = ", len(inputPath))
+        try:
+            inputPath[0].send_keys(filePath)
+        except:
+            print("cannot send path to choose file to post ", len(inputPath))
+            return
+        time.sleep(2)
+        while True:
+            nextStep = int(input("press 1 to post caption:"))
+            if nextStep == 1:
+                break
+            else:
+                print("this input is not correct, still wait")
+        self.checkButtonOk()
+        # need to press nextButton 2 times
+        for i in range(2):
+            if self.nextButtonWhenPost() == False:
+                self.checkButtonOk()
+                self.nextButtonWhenPost()
+
+        WebDriverWait(self.driver, 15).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "div[aria-label='Write a caption...']")))
+        textCaption = self.driver.find_element(By.CSS_SELECTOR, "div[aria-label^='Write a caption']")
+        textCaption.click()
+        for cap in captions:
+            try:
+                print(cap)
+                textCaption.send_keys(cap)
+            except:
+                # self.driver.execute_script(JS_ADD_TEXT_TO_INPUT,textCaption,cap)
+                action = ActionChains(self.driver)
+                self.pasteContent(cap, action)
+        time.sleep(2)
+        shares = self.driver.find_elements(By.CSS_SELECTOR, "div[role='button']")
+        for share in shares:
+            try:
+                if share.text == "Share":
+                    share.click()
+                    break
+            except:
+                continue
+        needToWait = True
+        coutToTimeout = 0
+        while needToWait == True:
+            print("need to wait more 5s for post successfully")
+            time.sleep(5)
+            coutToTimeout = coutToTimeout + 1
+            successPost = self.driver.find_elements(By.CSS_SELECTOR, "span[class^='x1lliihq']")
+            for i in successPost:
+                if i.text == "Your post has been shared." or i.text == "Your reel has been shared.":
+                    needToWait = False
+                    break
+            if coutToTimeout == 6:
+                print("Timeout for this session")
+                break
+        print("The new post is created successfully,remove folder")
+        shutil.rmtree(folderToPost)
+        time.sleep(10)
+        # self.driver.close()
+        return True
     def postTheNewPost2(self,isVideo):
         print("start to post")
         folderToPost =""
@@ -489,7 +594,7 @@ class account:
         else:
             folderToPost = self.mPath+"/image/"
         # will get caption on the begin of function to check the caption is English or not
-        captions = util.getCaption2(folderToPost, self.mHastagsPost, self.mUser)
+        captions = util.getCaption2(folderToPost, self.mHastagsPost, self.mUser,self.mNiche)
         if captions[0] == "NotEnglish" or self.checkDuplicate(captions[0]) == False:
             shutil.rmtree(folderToPost)
             self.postTheNewPost2(self.downloadPost2())
@@ -564,14 +669,19 @@ class account:
             except:
                 continue
         needToWait = True
+        coutToTimeout=0
         while needToWait==True:
             print("need to wait more 5s for post successfully")
             time.sleep(5)
+            coutToTimeout=coutToTimeout+1
             successPost = self.driver.find_elements(By.CSS_SELECTOR, "span[class^='x1lliihq']")
             for i in successPost:
                 if i.text =="Your post has been shared." or i.text=="Your reel has been shared.":
                     needToWait = False
                     break
+            if coutToTimeout==6:
+                print("Timeout for this session")
+                break
         print("The new post is created successfully,remove folder")
         shutil.rmtree(folderToPost)
         time.sleep(10)

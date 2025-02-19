@@ -79,7 +79,7 @@ def getCaption(folder,mHastagPost,mUser):
         print(Exception)
         return "False"
 #    This function to get caption and post included the shirt in this post
-def getCaption2(folder,mHastagPost,mUser):
+def getCaption2(folder,mHastagPost,mUser,mNiche):
     try:
         filesToGet =""
         for files in glob.glob(folder+"*.txt"):
@@ -100,12 +100,12 @@ def getCaption2(folder,mHastagPost,mUser):
                     break
             if len(tempText)>0:
                 result.append(tempText)
-            if isEnglish == False and i[0].isascii() == False:
-                print("the language is not English , need to download post again :",i[0])
-                return ["NotEnglish"]
-            else:
-                isEnglish = True
-        followMe = "Make sure you check out Yellowstone store link in bio 👉: @"+mUser+"\n"
+            # if isEnglish == False and i[0].isascii() == False:
+            #     print("the language is not English , need to download post again :",i[0])
+            #     return ["NotEnglish"]
+            # else:
+            #     isEnglish = True
+        followMe = "Make sure you check out "+mNiche+" store link in bio 👉: @"+mUser+"\n"
         result.append(followMe)
         sizeHastag = len(mHastagPost)
         rand30 = genRandom30List(sizeHastag)
