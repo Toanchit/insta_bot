@@ -16,11 +16,13 @@ def downloadPost(L,urlLink):
         downloadImage(L,post)
         return False
 def downloadvideo(L,post):
+    temPattern = L.dirname_pattern
     L.dirname_pattern = L.dirname_pattern+"video/"
     L.download_post(post,"video")
+    L.dirname_pattern = temPattern
 def downloadImage(L,post):
+    temPattern = L.dirname_pattern
     L.dirname_pattern = L.dirname_pattern + "image/"
     L.download_post(post,"image")
-
-
+    L.dirname_pattern = temPattern
 

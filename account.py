@@ -575,9 +575,12 @@ class account:
             coutToTimeout = coutToTimeout + 1
             successPost = self.driver.find_elements(By.CSS_SELECTOR, "span[class^='x1lliihq']")
             for i in successPost:
-                if i.text == "Your post has been shared." or i.text == "Your reel has been shared.":
-                    needToWait = False
-                    break
+                try:
+                    if i.text == "Your post has been shared." or i.text == "Your reel has been shared.":
+                        needToWait = False
+                        break
+                except:
+                    continue
             if coutToTimeout == 6:
                 print("Timeout for this session")
                 break
